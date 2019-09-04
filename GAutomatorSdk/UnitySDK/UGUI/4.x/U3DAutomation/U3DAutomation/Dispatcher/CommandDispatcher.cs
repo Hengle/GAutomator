@@ -26,6 +26,13 @@ namespace WeTest.U3DAutomation
         private static Queue<Command> commandQueue = new Queue<Command>();//接收队列
         private static BlockQueue<Command> sendQueue = new BlockQueue<Command>();//发送队列
 
+
+        public static void CloseServerSocket()
+        {
+            CloseSocket(serverSocket);
+        }
+
+
         private static bool Create(int port, int blocklog)
         {
             IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
@@ -132,9 +139,7 @@ namespace WeTest.U3DAutomation
                     {
                         Logger.e(e.Message + " " + e.StackTrace);
                     }
-                    
                 }
-                
             }
         }
 
@@ -221,6 +226,7 @@ namespace WeTest.U3DAutomation
         }
         private static void Send(Socket handler, String data)
         {
+            Logger.d("send :" + data);
             byte[] byteData = Encoding.UTF8.GetBytes(data);
             byte[] sendByteData = new byte[byteData.Length + 4];
             byte[] lengthByte = BitConverter.GetBytes(byteData.Length);

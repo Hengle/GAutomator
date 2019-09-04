@@ -46,7 +46,7 @@ def _login_edit_box(account, pwd):
             if len(user_tmp) > 0 and "QQ" not in user_tmp and u"用户名" not in user_tmp and u"手机号" not in user_tmp and "/" not in user_tmp:
                 # click the x point
                 for i in range(0, local_range):
-                    package_name = uiauto.info["currentPackageName"]
+                    package_name = get_current_pkgname()
                     if package_name != None and package_name != "com.tencent.mm" and package_name != "com.tencent.mobileqq":
                         logger.info("break login_edit_box because package not in tencent...  " + package_name)
                         return
@@ -56,8 +56,8 @@ def _login_edit_box(account, pwd):
                             local_y))
              #  uiauto.wait.idle()
                 # user_edit.set_text(account)
-                excute_adb_process("shell input text " + account)
-                logger.info(account)
+            excute_adb_process("shell input text " + account)
+            logger.info("accont:" + account)
 
             #   uiauto.wait.update()
               # logger.info("src and dest content.")
@@ -95,20 +95,25 @@ def _afterlogin():
         height = uiauto.info["displayHeight"]
         width = uiauto.info["displayWidth"]
         x = width / 2
-        for y in range(height * 4 / 5, height * 1 / 5, -1 * height / 50):
+        for y in range(int(height * 4 / 5),int( height * 1 / 5), int(-1 * height / 50)):
             if uiauto(text=u'开启消息推送', className=u'android.widget.TextView').exists:
                 uiauto.wait.idle()
                 uiauto.click(x, y)
                 logger.info(str(x) + ", " + str(y))
-
                 x = width / 10
                 y = height / 10
                 uiauto.wait.idle()
                 uiauto.click(x, y)
                 logger.info(str(x) + ", " + str(y))
     if uiauto(text=u'马上绑定',className=u'android.widget.Button').exists:
-        uiauto(text=u'关闭', className=u'android.widget.TextView').click()
-        logger.info("click 关闭")
+        logger.info("处理马上绑定页面 ..")
+        if uiauto(text=u'关闭', className=u'android.widget.TextView').exists:
+            uiauto(text=u'关闭', className=u'android.widget.TextView').click()
+        elif uiauto(resourceId=u'com.tencent.mobileqq:id/ivTitleBtnLeft', className=u'android.widget.TextView').exists:
+            uiauto(resourceId=u'com.tencent.mobileqq:id/ivTitleBtnLeft', className=u'android.widget.TextView').click()
+        else:
+            logger.info("处理马上绑定页面失败")
+
 
 def _login_qq():
     # qq
@@ -242,12 +247,12 @@ def _login_wx():
 def _prelogin_qq():
     logger.info("tryp to prelogin qq")
     try:
-        if uiauto(text=u'登 录', className=u'android.widget.Button').exists and uiauto(text=u'新用户', className=u'android.widget.Button').exists and not uiauto(className=u'android.widget.EditText').exists:
+        if uiauto(textMatches=u'登(\\s)?录', className=u'android.widget.Button').exists and uiauto(text=u'新用户', className=u'android.widget.Button').exists and not uiauto(className=u'android.widget.EditText').exists:
             logger.info("pre login qq")
             uiauto.wait.idle()
-            uiauto(text=u'登 录', className=u'android.widget.Button').click()
+            uiauto(textMatches=u'登(\\s)?录', className=u'android.widget.Button').click()
     except Exception as e:
-            logger.info(e)
+            logger.exception(e)
 
 def _prelogin_wechat():
     logger.info("tryp to prelogin wechat")
@@ -263,6 +268,31 @@ def _prelogin_wechat():
     except Exception as e:
         logger.info(e)
 
+@retry_if_fail()
+def get_current_pkgname():
+    package_name = None
+    def reconnectUiautomator():
+        if os.environ.get("UIAUTOMATORPORT") is None:
+            logger.info("uiautomator get currentPackageName failed...restart uiautomator")
+            m.init_uiautomator()
+        else:
+            logger.info("uiautomator get currentPackageName failed...sleep to wait platform reconnecting")
+            time.sleep(10)  # m.restartPlatformDialogHandler()
+    try:
+        package_name = uiauto.info["currentPackageName"]
+        if package_name is None:
+            reconnectUiautomator()
+    except Exception as e:
+        reconnectUiautomator()
+        try:
+            package_name = uiauto.info["currentPackageName"]
+        except Exception as e:
+            logger.exception(e)
+    if package_name:
+        logger.info("packagename : "  + package_name)
+    return package_name
+
+
 @time_snap(interval=9, times=19)
 def login_tencent(account, pwd, timeout=180):
     start_time = time.time()
@@ -271,15 +301,8 @@ def login_tencent(account, pwd, timeout=180):
 
     while end_time - start_time < timeout:
         # 在密码框界面之前可能会有另一个跳转界面需要处理
-        package_name = uiauto.info["currentPackageName"]
-        if package_name is None:
-            if os.environ.get("UIAUTOMATORPORT") is None:
-                logger.info("uiautomator dump failed...restart uiautomator")
-                m.init_uiautomator()
-            else:
-                logger.info("uiautomator dump failed...sleep to wait platform reconnecting")
-                time.sleep(5)#m.restartPlatformDialogHandler()
-            package_name = uiauto.info["currentPackageName"]
+        package_name = get_current_pkgname()
+
         if package_name == "com.tencent.mobileqq":
             _prelogin_qq()
         elif package_name == "com.tencent.mm":
@@ -300,4 +323,4 @@ def login_tencent(account, pwd, timeout=180):
 
 if __name__ == "__main__":
     #print get_login()
-    login_tencent("2952018575", "wemonster")
+    login_tencent("2952018575", "1234")

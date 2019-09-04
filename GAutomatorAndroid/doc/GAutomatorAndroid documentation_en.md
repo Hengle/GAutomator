@@ -37,7 +37,8 @@
 - [6 Cloud platform reporter](#6)
 	- [6.1 screen shot and mark](#6.1)
 	- [6.2 screen shot](#6.2)
-	- [6.3 report error](#6.3)
+	- [6.3 add scenetag](#6.3)
+	- [6.4 report testcase](#6.4)
 - [7 Custom function](#7)
 	- [7.1 Register function in unity ](#7.1)
 	- [7.2 Call registered callback](#7.2)
@@ -171,7 +172,8 @@ device=manager.get_devcie()
 
 ## 2.3 Test on wetest cloud platform
 GAutomator tester script can run on your pc and wetest cloud test platform. Wetest prepare a docker container for each mobile, run your script just like on a linux pc has one mobile(prepare python,adb).WeTest cloud test platform will find the compatibility issues, also record the test process, provide screenshot,mobile log,crash information and so on.
-When wetest cloud platform executes your test script, it execute the main.py. main.py contain install your application,clear your application data and qq wechat data,launch your application. After prepare the environment, start your test logic from testcase.runner run function.
+When wetest cloud platform executes your test script, it execute the 
+. main.py contain install your application,clear your application data and qq wechat data,launch your application. After prepare the environment, start your test logic from testcase.runner run function.
 ```python
 import traceback
 
@@ -191,6 +193,18 @@ def run():
 ```
 then run build.py,this script will generate a script zip run on the wetest platform.
 ```python build.py```
+
+In some special cases, if you want to control the test flow yourself(instead of entring the test by main.py), you have to write a runTest.sh(pack it to your zip) to tell the WeTest Platform how to run your test. Here is an example:
+
+```shell
+#!/bin/bash
+echo "runTest.sh start..."
+echo "start my flow..."
+# do not cd to subpathes here!!!
+PYTHONPATH=. python testcase/my_entry.py 1>upload.dir/stanrd.txt 2>upload.dir/out.txt
+echo "runTest.sh end..."
+```
+
 
 start test step:
 
@@ -253,7 +267,7 @@ GAutomator has three way to find the GameObject。Example：sample/find_elements
 <a name="3.1"></a>
 
 ## 3.1 find_element
-*find_element* use the [GameObject.Find] method to find a GameObject by name.This function only returns active GameObjects. If no GameObject with name can be found, null is returned. If name contains a '/' character, it traverses the hierarchy like a path name. *We find a bug in same unity version, when you use the full path, it may return the inactive gameobject*
+*find_element* use the [GameObject.Find] method to find a GameObject by name.This function only returns active GameObjects. If no GameObject with name can be found, returns None . If name contains a '/' character, it traverses the hierarchy like a path name. *We find a bug in same unity version, when you use the full path, it may return the inactive gameobject*
 ```python
 #import sys,os,time
 #sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..\\")))
@@ -308,7 +322,7 @@ python find_elements.py
   </GameObject>
 </GameObject>
 ```
-This scene has two gameobjects("/Canvas/Panel/Button"), this function can only return one gameobject. If the name you find is not existed in this scene, return None.
+This scene has two gameobjects("/Canvas/Panel/Button"), this function can only return one gameobject. If the name you find is not existed in this scene, returns None
 
 <a name="3.2"></a>
 
@@ -906,16 +920,33 @@ def screen_shot_click(element):
 <img src="image/scene_tag.png" alt="Drawing" width="600px" />
 
 <a name="6.4"></a>
+
 ## 6.4 report testcase
 GAutomator does not use the unittest as the underlying framework for testing, so there is no assertion that functional testing can not be done. The report function is used to save the error information into _wetest_testcase_result.txt.When submitting a functional test , Wetest cloud testing platform will pares the error information and show them in the reporter.
 
 ```python
+#way1
 report.report(True, "testcase1")
 report.report(False, u"testcase2",u"Report test error 中文")
+
+#way2
+@report_wetest
+def casename():
+	assert(false)
 ```
 
 *reporter.report(result,test_case_name, message="")* is used to record the result of a testcase. At the end of  script, runner.run calls _report_total () to output all the results to _wetest_testcase_result.txt. The GAutomator adds the call stack in addition to the output message and test_case_name. Name and message encoding needs to be consistent, if there is a Chinese case, use UTF-8 encoding format.
+*@report_wetest* is a function decorator indicating the function as a case by calling report.report internal.
 
+A sample integrating pytest is in testcase/test_pytestsample.py.
+To use pytest (which means the entry is not main.py ), you have to write a *runTest.sh*(see 2.3 for more details).
+
+```shell
+#!/bin/bash
+echo "runTest.sh start..."
+PYTHONPATH=. python testcase/test_pytestsample.py 1>upload.dir/stanrd.txt 2>upload.dir/out.txt
+
+```
 
 <a name="7"></a>
 

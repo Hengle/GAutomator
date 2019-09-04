@@ -132,11 +132,20 @@ namespace WeTest.U3DAutomation
         {
             try
             {
-                Logger.d("InjectTouchEvent");
+       //         Logger.d("InjectTouchEvent");
                 List<TouchEvent> events = TouchEventHandler.INSTANCE.GetTouchEvents();
 
                 if (events != null)
                 {
+                    float offsetx = 0, offsety = 0, scalex = 0, scaley = 0;
+                    if (CoordinateTool.GetCurrenScreenParam(ref offsetx, ref offsety, ref scalex, ref scaley))
+                    {
+                        for (int i = 0; i < events.Count; ++i) {
+                            events[i].x -= offsetx;
+                            events[i].y -= offsety;
+                        }
+                    }
+
                     for (int i = 0; i < events.Count; ++i)
                     {
                         TouchEvent touchEvent=events[i];
@@ -280,7 +289,7 @@ namespace WeTest.U3DAutomation
         /// <param name="command"></param>
         protected void handleGetElements(Command command)
         {
-            Logger.d("handleGetElements +"+command.recvObj);
+            Logger.d("handleGetElements " + command.recvObj);
             List<string> elementNames = JsonParser.Deserialization<List<string>>(command);
             List<ElementInfo> elements = new List<ElementInfo>();
             foreach (string s in elementNames)
@@ -595,6 +604,7 @@ namespace WeTest.U3DAutomation
                 command.status = ResponseStatus.UN_KNOW_ERROR;
                 command.sendObj = ex.Message + " " + ex.StackTrace;
             }
+            Logger.d("scene :" + command.sendObj);
             CommandDispatcher.SendCommand(command);
         }
 
@@ -643,7 +653,10 @@ namespace WeTest.U3DAutomation
             }else{
                 events = JsonParser.Deserialization<TouchEvent[]>(command);
             }
-             
+
+            float scalex = 0, scaley = 0, offsetx = 0, offsety = 0;
+            Point ptNew = new Point(CoordinateType.UnityScreen);
+         
             TouchActions actions = new TouchActions();
             actions.cmd = command;
             actions.events = events;
@@ -723,13 +736,13 @@ namespace WeTest.U3DAutomation
         }
         protected void handleGetElementByPos(Command command)
         {
-            Logger.d("handleGetElementByPos");
             try
             {
                 List<double> pos = JsonParser.Deserialization<List<double>>(command);
                 float x = (float)pos[0];
                 float y = (float)pos[1];
-                List<GameObject> selectedObjs = uiHelper.FindGameObjectsByPoint(new Point(x, y));;
+                Logger.d("handleGetElementByPos: " + x + " " + y);
+                List<GameObject> selectedObjs = uiHelper.FindGameObjectsByPoint(new Point(x, y));
                 if (selectedObjs == null || selectedObjs.Count == 0)
                 {
                     command.status = ResponseStatus.GAMEOBJ_NOT_EXIST;

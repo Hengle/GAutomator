@@ -53,7 +53,7 @@ class IOSDevice(Device):
         wdaport = os.environ.get("WDA_LOCAL_PORT", __get_wdaport_by_udid(udid))
         if wdaport:
             logger.info("wda port detected: " + wdaport)
-            self.__wda_connector = WdaManager(wdaport)
+            self.__wda_connector = WdaManager(wdaport, os.environ.get("PLATFORM_IP", "127.0.0.1"))
         atexit.register(self.__cleanup)
         pass
 
@@ -109,7 +109,9 @@ class IOSDevice(Device):
         counts = int(timeout / 2 + 1)
         for i in range(counts):
             try:
-                self.__engine_connector = EngineFactory.createEngine(engine_type, "127.0.0.1", int(local_engine_port))
+                self.__engine_connector = EngineFactory.createEngine(engine_type,
+                                                                     os.environ.get("PLATFORM_IP", "127.0.0.1"),
+                                                                     int(local_engine_port))
                 if self.__engine_connector is None:
                     logger.error("create engine failed . invalid type : " + str(engine_type))
                     return ERR_INVALID_ENGINETYPE

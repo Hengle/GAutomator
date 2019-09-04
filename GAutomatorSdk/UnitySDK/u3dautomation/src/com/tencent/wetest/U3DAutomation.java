@@ -32,15 +32,20 @@ public class U3DAutomation {
 	protected static class MScreen {
 		public int width = 0;
 		public int height = 0;
-
+		public float x = 0;
+		public float y = 0;
 		MScreen() {
 			width = 0;
 			height = 0;
+			x = 0;
+			y = 0;
 		}
 
-		MScreen(int w, int h) {
+		MScreen(int w, int h, float x, float y) {
 			width = w;
 			height = h;
+			this.x = x;
+			this.y = y;
 		}
 	}
 
@@ -305,7 +310,7 @@ public class U3DAutomation {
 			}
 
 			playerActivity = (Activity) objcurrentActivity;
-
+			
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
@@ -323,14 +328,13 @@ public class U3DAutomation {
 					.equals("com.unity3d.player.UnityPlayer")) {
 				return obj;
 			} else {
-				//继承扩展的时候
-				Log.d(TAG, "Activity obj name= "+obj.getClass().getCanonicalName());
+				Log.i(TAG, "Activity obj name= "+obj.getClass().getCanonicalName());
 				
 				Field[] fields = obj.getClass().getDeclaredFields();
 
 				for (int i = 0; i < fields.length; ++i) {
 					Field f = fields[i];
-					Log.d(TAG, "field type = " + f.getType());
+					Log.i(TAG, "field type = " + f.getType());
 					if (f.getType().getCanonicalName()
 							.equals("com.unity3d.player.UnityPlayer")) {
 						Object activity;
@@ -346,6 +350,7 @@ public class U3DAutomation {
 
 					}
 				}
+				
 			}
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
@@ -354,11 +359,12 @@ public class U3DAutomation {
 		return null;
 	}
 	
+	
 	private static SurfaceView getSurfaceView(){
 		if (surfaceView == null) {
 			Object activity = getUnityPlayerActivity();
 			if (activity == null) {
-				Log.d(TAG, "not find com.unity3d.player.UnityPlayer");
+				Log.e(TAG, "not find com.unity3d.player.UnityPlayer");
 				return null;
 			}
 			
@@ -366,9 +372,9 @@ public class U3DAutomation {
 
 			for (int i = 0; i < fields.length; ++i) {
 				Field f = fields[i];
-				Log.d(TAG, "field type = " + f.getType());
+				Log.i(TAG, "field type = " + f.getType());
 				if (f.getType() == SurfaceView.class) {
-					Log.d(TAG, "find SurfaceView");
+					Log.i(TAG, "find SurfaceView");
 					f.setAccessible(true);
 					try {
 						surfaceView = (SurfaceView) f.get(activity);
@@ -383,7 +389,6 @@ public class U3DAutomation {
 		}
 		return surfaceView;
 	}
-
 	
 	/**
 	 * @brief 
@@ -394,12 +399,16 @@ public class U3DAutomation {
 	 * @return
 	 */
 	private static MScreen getMscreen() {
-		SurfaceView surfaceView_=getSurfaceView();
+		SurfaceView surfaceView_ = getSurfaceView();
 		if(surfaceView_!=null){
 			try {
+				int[] rootViewLocation = new int[2];
+				surfaceView_.getLocationOnScreen(rootViewLocation);
+				float x = rootViewLocation[0];
+				float y = rootViewLocation[1];
 				int height = surfaceView_.getHeight();
 				int width = surfaceView_.getWidth();
-				mscreen = new MScreen(width, height);
+				mscreen = new MScreen(width, height,x,y);
 				return mscreen;
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage());
@@ -424,7 +433,7 @@ public class U3DAutomation {
 	private static MScreen GetMResolution() {
 		Log.i(TAG, "GetMResolution Enter");
 
-		Activity obj = (Activity) getUnityPlayerActivity();
+		Activity obj = (Activity) GetPlayerActivity();
 		if (obj == null) {
 			Log.e(TAG, "GetContext: get activity is null");
 			return null;
@@ -437,19 +446,23 @@ public class U3DAutomation {
 		Log.d(TAG, "View class name = " + view.getClass().getCanonicalName());
 		int width = view.getWidth();
 		int height = view.getHeight();
+		int[] rootViewLocation = new int[2];
+		view.getLocationOnScreen(rootViewLocation);
+		float x = rootViewLocation[0];
+		float y = rootViewLocation[1];
 
-		Log.d(TAG, "width=" + width + ", height=" + height);
+		Log.d(TAG, "width=" + width + ", height=" + height + ", x=" + x + ", y=" + y);
 
-		mscreen = new MScreen(width, height);
+		mscreen = new MScreen(width, height, x , y);
 
 		return mscreen;
 	}
 
 	public static int GetWidth() {
-		Log.i(TAG, "GetWidth( )");
+		Log.i(TAG, "GetWidth()");
 		MScreen msc = null;
 		try {
-			msc = getMscreen(); //方式1
+			msc = getMscreen(); //鏂瑰紡1
 			return msc.width;
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(),e);
@@ -465,6 +478,30 @@ public class U3DAutomation {
 		try {
 			msc = getMscreen();
 			return msc.height;
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(),e);
+		}
+		return -1;
+	}
+	
+	public static float GetX() {
+		Log.i(TAG, "GetX()");
+		MScreen msc = null;
+		try {
+			msc = getMscreen(); //鏂瑰紡1
+			return msc.x;
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(),e);
+		}
+		return -1;
+	}
+	
+	public static float GetY() {
+		Log.i(TAG, "GetY()");
+		MScreen msc = null;
+		try {
+			msc = getMscreen(); //鏂瑰紡1
+			return msc.y;
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(),e);
 		}

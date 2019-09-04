@@ -26,7 +26,7 @@ _uiautomator_port = os.environ.get("UIAUTOMATOR_PORT","19008")
 def restartPlatformDialogHandler():
     try:
         kill_uiautomator()
-        time.sleep(4)  # wait for platform to relaunch uiautomator
+        time.sleep(8)  # wait for platform to relaunch uiautomator
         get_uiautomator().setdialogtextpattern(
             u'(^(完成|关闭|好|好的|确定|确认|安装|下次再说|暂不删除)$|(.*(?<!不|否)(忽略|允(\s)?许|同意)|继续|稍后|暂不|下一步).*)')
         get_uiautomator().setdialogtextgrouppattern(
@@ -74,19 +74,22 @@ def init_uiautomator_with_dialoghandler():
     config_path= os.path.abspath(
         os.path.join(file_path,"..","third","libs","uiAutomator","wetest_dialog_config.properties"))
     write_dialog_config(config_path)
-    excute_adb_process("push {0} /data/local/tmp".format(uiautomator_stub_path))
+    ret = excute_adb_process("push {0} /data/local/tmp".format(uiautomator_stub_path))
+    if "no devices/emulators found" in ret or "device offline" in ret:
+        return None
     excute_adb_process("push {0} /data/local/tmp".format(config_path))
     excute_adb_process("shell am force-stop com.tencent.wetest.rc.rc_uiautomatorstub")
     kill_uiautomator()
     logger.debug("Start UIAutomator")
     #os.system("adb shell ps")
     remove_forward(_uiautomator_port)
+    forward(_uiautomator_port, _device_port)
     uiautomator_process = excute_adb_process_daemon("shell uiautomator runtest DialogHandler_polling.jar -c com.github.uiautomatorstub.Stub",shell=True ,needStdout=False)
  #   uiautomator_process = excute_adb_process_daemon("shell uiautomator runtest DialogHandler.jar -c com.github.uiautomatorstub.Stub", shell=True)
     #call_adb_shell("adb forward tcp:{0} tcp:{1} && adb shell uiautomator runtest uiautomator_stand_stub.jar -c com.github.uiautomatorstub.Stub".format(_uiautomator_port,_device_port))
     # call_adb_shell(["shell","uiautomator","runtest","/data/local/tmp/uiautomator_stand_stub.jar","-c","com.github.uiautomatorstub.Stub","--nohup"])#--nohup
     time.sleep(2)
-    forward(_uiautomator_port, _device_port)
+
    # os.system("adb shell ps")
 
 def init_uiautomator():
@@ -98,13 +101,14 @@ def init_uiautomator():
     file_path = os.path.split(os.path.realpath(__file__))[0]
     uiautomator_stub_path = os.path.abspath(
         os.path.join(file_path, "..","third","libs","uiAutomator","uiautomator-stub.jar"))
-    adb=AdbTool()
-    logger.debug(adb.cmd_wait("push",uiautomator_stub_path,"/data/local/tmp"))
-
+    # adb=AdbTool()
+    logger.debug(excute_adb_process("push " + uiautomator_stub_path + " /data/local/tmp"))
+    remove_forward(_uiautomator_port)
+    forward(_uiautomator_port,_device_port)
     logger.debug("Start UIAutomator")
-    uiautomator_process=adb.cmd("shell","uiautomator","runtest","uiautomator-stub.jar","-c","com.github.uiautomatorstub.Stub")
+    uiautomator_process = excute_adb_process_daemon("shell uiautomator runtest uiautomator-stub.jar -c com.github.uiautomatorstub.Stub", shell=True )
     time.sleep(2)
-    adb.forward(_uiautomator_port,_device_port)
+
 
 def _init():
     port = os.environ.get("UIAUTOMATORPORT")

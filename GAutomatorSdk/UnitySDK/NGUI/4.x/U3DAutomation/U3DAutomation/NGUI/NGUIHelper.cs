@@ -139,10 +139,10 @@ namespace WeTest.U3DAutomation
             if(rc==null)
                 return null;
 
-            Logger.v("GetBound gameobject =" + obj.name + "  rc.x=" + rc.x + ", rc.y=" + rc.y + ", wight = " + rc.width + ", height=" + rc.height);
+            Logger.d("GetBound gameobject =" + obj.name + "  rc.x=" + rc.x + ", rc.y=" + rc.y + ", wight = " + rc.width + ", height=" + rc.height);
 
             //坐标缩放
-            float scalex = 0, scaley = 0;
+            float offsetx = 0, offsety = 0, scalex = 0, scaley = 0;
             if (RuntimePlatform.IPhonePlayer == Application.platform)//ios默认返回归一化的值
             {
                 rc.x = rc.x / Screen.width;
@@ -150,17 +150,17 @@ namespace WeTest.U3DAutomation
                 rc.width = rc.width / Screen.width;
                 rc.height = rc.height / Screen.height;
             }
-            else if (CoordinateTool.GetCurrenScreenScale(ref scalex, ref scaley))
+            else if (CoordinateTool.GetCurrenScreenParam(ref offsetx, ref offsety, ref scalex, ref scaley))
             {
-                rc.x = rc.x * scalex;
-                rc.y = rc.y * scaley;
+                rc.x = rc.x * scalex + offsetx;
+                rc.y = rc.y * scaley + offsety;
 
                 rc.width = rc.width * scalex;
                 rc.height = rc.height * scaley;
 
 
             }
-            Logger.v("GetBound() after scale : rc.x=" + rc.x + ", rc.y=" + rc.y + ", wight = " + rc.width + ", height=" + rc.height);
+            Logger.d("GetBound() after scale : rc.x=" + rc.x + ", rc.y=" + rc.y + ", wight = " + rc.width + ", height=" + rc.height);
 
             return rc;
         }

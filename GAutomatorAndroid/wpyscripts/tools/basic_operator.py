@@ -44,9 +44,16 @@ def screen_shot_click(element, sleeptime=2, exception=False):
         return
     if isinstance(element, str):
         try:
+            element_locator = element
             element = engine.find_element(element)
+            if element is None:
+                logger.error( "{0} can't find".format(element_locator))
+                if exception:
+                    raise WeTestRuntimeError
+                else:
+                    return False
         except WeTestRuntimeError as e:
-            message = "{0} can't find".format(element)
+            message = "(exception) {0} can't find".format(element)
             logger.error(message)
             if exception:
                 raise
@@ -260,11 +267,7 @@ def wait_for_scene(name, max_count=20, sleeptime=2):
 
 
 def find_less_click_element(elements):
-    """
-        一直等待，直到某个节点消失
-    :param elements:
-    :return:
-    """
+
     global click_dict
     min_num = 1000
     min_element = None

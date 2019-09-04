@@ -22,7 +22,7 @@ namespace WeTest.U3DAutomation
         {
             Dynamic.ThirdManager.INSTANCE.Initialize();
 
-            Dynamic.ThirdManager.Start();
+             Dynamic.ThirdManager.Start();
 
             //Dynamic.ThirdManager.getAndroidMScreen();
 
@@ -76,11 +76,6 @@ namespace WeTest.U3DAutomation
             }
         }
 
-        public static Application.LogCallback getLogCallBack()
-        {
-            return CrashMonitor.getLogCallBackHandler();
-        }
-
         void OnApplicationPause(bool pauseStatus)
         {
             Logger.d("OnApplicationPause:{0}", pauseStatus);
@@ -105,6 +100,12 @@ namespace WeTest.U3DAutomation
                 survive++;
             }
 
+        }
+
+        private void OnApplicationQuit()
+        {
+            Logger.d("OnApplicationQuit close server socket...");
+            CommandDispatcher.CloseServerSocket();
         }
     }
 }

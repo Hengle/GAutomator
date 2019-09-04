@@ -80,11 +80,7 @@ namespace WeTest.U3DAutomation
             }
         }
 
-        public static Application.LogCallback getLogCallBack()
-        {
-            return CrashMonitor.getLogCallBackHandler();
-        }
-
+ 
         void OnApplicationPause(bool pauseStatus)
         {
             Logger.d("OnApplicationPause:{0}", pauseStatus);
@@ -98,7 +94,8 @@ namespace WeTest.U3DAutomation
 
         void OnDestroy()
         {
-            Logger.d("Destory Wetest sdk");
+            Logger.d("Destroy Wetest sdk");
+            CommandDispatcher.CloseServerSocket();
         }
 
         void OnGUI()
@@ -110,5 +107,6 @@ namespace WeTest.U3DAutomation
             }
 
         }
+
     }
 }
